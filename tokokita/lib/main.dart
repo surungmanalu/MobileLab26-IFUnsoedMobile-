@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tokokita/ui/produk_page.dart';
+import 'package:tokokita/login_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: false,
       ),
-      home: const ProdukPage(),
+      home: const LoginPage(),
     );
   }
 }
