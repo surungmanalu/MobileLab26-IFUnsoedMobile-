@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:tokokita/bloc/logout_bloc.dart';
+import 'package:tokokita/bloc/produk_bloc.dart';
 import 'package:tokokita/model/produk.dart';
 import 'package:tokokita/ui/login_page.dart';
 import 'package:tokokita/ui/produk_detail.dart';
@@ -45,44 +47,60 @@ class _ProdukPageState extends State<ProdukPage> {
             ListTile(
               title: const Text('Logout'),
               trailing: const Icon(Icons.logout),
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
+              onTap: () async {
+                await LogoutBloc.logout();
+                if (context.mounted) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                    (route) => false,
+                  );
+                }
               },
             )
           ],
         ),
       ),
-      body: ListView(
-        children: [
-          ItemProduk(
-            produk: Produk(
-              id: 1,
-              kodeProduk: 'A001',
-              namaProduk: 'Kamera',
-              hargaProduk: 5000000,
-            ),
-          ),
-          ItemProduk(
-            produk: Produk(
-              id: 2,
-              kodeProduk: 'A002',
-              namaProduk: 'Kulkas',
-              hargaProduk: 2500000,
-            ),
-          ),
-          ItemProduk(
-            produk: Produk(
-              id: 3,
-              kodeProduk: 'A003',
-              namaProduk: 'Mesin Cuci',
-              hargaProduk: 2000000,
-            ),
-          ),
-        ],
+      body: FutureBuilder<List<Produk>>(
+        future: ProdukBloc.getProduks(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Terjadi kesalahan saat memuat data: ${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+          return snapshot.hasData
+              ? ListProduk(list: snapshot.data)
+              : const Center(
+                  child: CircularProgressIndicator(),
+                );
+        },
       ),
+    );
+  }
+}
+
+class ListProduk extends StatelessWidget {
+  final List<Produk>? list;
+
+  const ListProduk({super.key, this.list});
+
+  @override
+  Widget build(BuildContext context) {
+    if (list == null || list!.isEmpty) {
+      return const Center(child: Text("Belum ada data produk"));
+    }
+    return ListView.builder(
+      itemCount: list!.length,
+      itemBuilder: (context, i) {
+        return ItemProduk(produk: list![i]);
+      },
     );
   }
 }

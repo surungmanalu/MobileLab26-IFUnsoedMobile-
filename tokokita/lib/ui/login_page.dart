@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:tokokita/bloc/login_bloc.dart';
+import 'package:tokokita/helpers/user_info.dart';
 import 'package:tokokita/ui/produk_page.dart';
 import 'package:tokokita/ui/registrasi_page.dart';
+import 'package:tokokita/widget/warning_dialog.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -85,17 +88,63 @@ class _LoginPageState extends State<LoginPage> {
       onPressed: () {
         var validate = _formKey.currentState!.validate();
         if (validate) {
-          if (!_isLoading) {
-            // Langsung arahkan ke ProdukPage
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const ProdukPage()),
-            );
-          }
+          if (!_isLoading) _submit();
         }
       },
-      child: const Text("Login"),
+      child: _isLoading
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
+          : const Text("Login"),
     );
+  }
+
+  void _submit() {
+    _formKey.currentState!.save();
+    setState(() {
+      _isLoading = true;
+    });
+
+    LoginBloc.login(
+      email: _emailTextboxController.text,
+      password: _passwordTextboxController.text,
+    ).then((value) async {
+      if (value.code == 200) {
+        await UserInfo().setToken(value.token.toString());
+        await UserInfo().setUserID(int.parse(value.userID.toString()));
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ProdukPage()),
+          );
+        }
+      } else {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => const WarningDialog(
+            description: "Login gagal, silahkan coba lagi",
+          ),
+        );
+      }
+    }, onError: (error) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) => const WarningDialog(
+          description: "Login gagal, silahkan coba lagi",
+        ),
+      );
+    }).whenComplete(() {
+      setState(() {
+        _isLoading = false;
+      });
+    });
   }
 
   Widget _menuRegistrasi() {

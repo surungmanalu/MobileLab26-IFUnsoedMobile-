@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:tokokita/bloc/registrasi_bloc.dart';
+import 'package:tokokita/widget/success_dialog.dart';
+import 'package:tokokita/widget/warning_dialog.dart';
 
 class RegistrasiPage extends StatefulWidget {
   const RegistrasiPage({super.key});
@@ -122,15 +125,55 @@ class _RegistrasiPageState extends State<RegistrasiPage> {
       onPressed: () {
         var validate = _formKey.currentState!.validate();
         if (validate) {
-          if (!_isLoading) {
-            // Simulasi submit registrasi di Modul 4
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Form Valid! Siap integrasi API')),
-            );
-          }
+          if (!_isLoading) _submit();
         }
       },
-      child: const Text("Registrasi"),
+      child: _isLoading
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
+          : const Text("Registrasi"),
     );
+  }
+
+  void _submit() {
+    _formKey.currentState!.save();
+    setState(() {
+      _isLoading = true;
+    });
+
+    RegistrasiBloc.registrasi(
+      nama: _namaTextboxController.text,
+      email: _emailTextboxController.text,
+      password: _passwordTextboxController.text,
+    ).then((value) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) => SuccessDialog(
+          description: "Registrasi berhasil, silahkan login",
+          okClick: () {
+            Navigator.pop(context);
+          },
+        ),
+      );
+    }, onError: (error) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) => const WarningDialog(
+          description: "Registrasi gagal, silahkan coba lagi",
+        ),
+      );
+    }).whenComplete(() {
+      setState(() {
+        _isLoading = false;
+      });
+    });
   }
 }
