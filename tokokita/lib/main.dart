@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tokokita/login_page.dart';
+import 'package:tokokita/ui/login_page.dart';
 
 void main() {
   runApp(const MyApp());
